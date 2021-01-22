@@ -60,8 +60,13 @@ extension TableRecord {
         key: String? = nil,
         using foreignKey: ForeignKey? = nil)
     -> BelongsToAssociation<Self, Destination>
+    where Destination: TableRecord
     {
-        BelongsToAssociation(key: key, using: foreignKey)
+        BelongsToAssociation(
+            originTableName: databaseTableName,
+            destinationRelation: Destination.relationForAll,
+            key: key,
+            using: foreignKey)
     }
     
     /// Creates a "Has many" association between Self and the destination type,
@@ -125,8 +130,13 @@ extension TableRecord {
         key: String? = nil,
         using foreignKey: ForeignKey? = nil)
     -> HasManyAssociation<Self, Destination>
+    where Destination: TableRecord
     {
-        HasManyAssociation(key: key, using: foreignKey)
+        HasManyAssociation(
+            originTableName: databaseTableName,
+            destinationRelation: Destination.relationForAll,
+            key: key,
+            using: foreignKey)
     }
     
     /// Creates a "Has Many Through" association between Self and the
@@ -272,8 +282,13 @@ extension TableRecord {
         key: String? = nil,
         using foreignKey: ForeignKey? = nil)
     -> HasOneAssociation<Self, Destination>
+    where Destination: TableRecord
     {
-        HasOneAssociation(key: key, using: foreignKey)
+        HasOneAssociation(
+            originTableName: databaseTableName,
+            destinationRelation: Destination.relationForAll,
+            key: key,
+            using: foreignKey)
     }
     
     /// Creates a "Has One Through" association between Self and the

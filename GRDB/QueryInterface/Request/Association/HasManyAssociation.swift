@@ -58,7 +58,7 @@
 ///     }
 ///
 /// See ForeignKey for more information.
-public struct HasManyAssociation<Origin: TableRecord, Destination: TableRecord>: AssociationToMany {
+public struct HasManyAssociation<Origin, Destination>: AssociationToMany {
     /// :nodoc:
     public typealias OriginRowDecoder = Origin
     
@@ -74,12 +74,16 @@ public struct HasManyAssociation<Origin: TableRecord, Destination: TableRecord>:
     }
     
     init(
+        originTableName: String,
+        destinationRelation: SQLRelation,
         key: String?,
         using foreignKey: ForeignKey?)
     {
+        let destinationTableName = destinationRelation.source.tableName
+        
         let foreignKeyRequest = SQLForeignKeyRequest(
-            originTable: Destination.databaseTableName,
-            destinationTable: Origin.databaseTableName,
+            originTable: destinationTableName,
+            destinationTable: originTableName,
             foreignKey: foreignKey)
         
         let condition = SQLAssociationCondition.foreignKey(
@@ -90,13 +94,13 @@ public struct HasManyAssociation<Origin: TableRecord, Destination: TableRecord>:
         if let key = key {
             associationKey = .fixedPlural(key)
         } else {
-            associationKey = .inflected(Destination.databaseTableName)
+            associationKey = .inflected(destinationTableName)
         }
         
         _sqlAssociation = _SQLAssociation(
             key: associationKey,
             condition: condition,
-            relation: Destination.relationForAll,
+            relation: destinationRelation,
             cardinality: .toMany)
     }
 }
