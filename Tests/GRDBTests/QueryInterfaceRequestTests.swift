@@ -978,4 +978,66 @@ class QueryInterfaceRequestTests: GRDBTestCase {
             }
         }
     }
+    
+    // MARK: - Free Table
+    
+    func testFreeTable() throws {
+        try makeDatabaseQueue().write { db in
+            try db.create(table: "parent") { t in
+                t.autoIncrementedPrimaryKey("id")
+                t.column("name", .text).notNull()
+            }
+            try db.create(table: "child") { t in
+                t.autoIncrementedPrimaryKey("id")
+                t.column("parentID", .integer).notNull().references("parent")
+                t.column("name", .text).notNull()
+            }
+            try db.execute(literal: """
+                INSERT INTO parent (name) VALUES ('parent1');
+                INSERT INTO parent (name) VALUES ('parent2');
+                INSERT INTO child (parentID, name) VALUES (1, 'child1');
+                INSERT INTO child (parentID, name) VALUES (1, 'child2');
+                INSERT INTO child (parentID, name) VALUES (2, 'child3');
+                """)
+            
+            struct Parent: Decodable, FetchableRecord, Equatable {
+                var id: Int64
+                var name: String
+            }
+            
+            struct Child: Decodable, FetchableRecord, Equatable {
+                var id: Int64
+                var parentID: Int64
+                var name: String
+            }
+            
+            struct ParentInfo: Decodable, FetchableRecord, Equatable {
+                var parent: Parent
+                var children: [Child]
+            }
+            
+            let request = QueryInterfaceRequest<Parent>
+                .all(fromTable: "parent")
+                .including(all: HasManyAssociation<Parent, Child>(originTable: "parent", destinationTable: "child").order(Column("id")))
+                .order(Column("id"))
+                .asRequest(of: ParentInfo.self)
+            let infos = try request.fetchAll(db)
+            XCTAssertEqual(Array(sqlQueries.filter { $0.starts(with: "SELECT") }.suffix(2)), [
+                            "SELECT * FROM \"parent\" ORDER BY \"id\"",
+                            "SELECT *, \"parentID\" AS \"grdb_parentID\" FROM \"child\" WHERE \"parentID\" IN (1, 2) ORDER BY \"id\""])
+            XCTAssertEqual(infos, [
+                ParentInfo(
+                    parent: Parent(id: 1, name: "parent1"),
+                    children: [
+                        Child(id: 1, parentID: 1, name: "child1"),
+                        Child(id: 2, parentID: 1, name: "child2"),
+                    ]),
+                ParentInfo(
+                    parent: Parent(id: 2, name: "parent2"),
+                    children: [
+                        Child(id: 3, parentID: 2, name: "child3"),
+                    ]),
+            ])
+        }
+    }
 }

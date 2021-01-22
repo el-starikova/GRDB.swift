@@ -104,3 +104,18 @@ public struct HasManyAssociation<Origin, Destination>: AssociationToMany {
             cardinality: .toMany)
     }
 }
+
+extension HasManyAssociation {
+    public init(
+        originTable: String,
+        destinationTable: String,
+        key: String? = nil,
+        using foreignKey: ForeignKey? = nil)
+    {
+        self.init(
+            originTableName: originTable,
+            destinationRelation: .all(fromTable: destinationTable),
+            key: key,
+            using: foreignKey)
+    }
+}

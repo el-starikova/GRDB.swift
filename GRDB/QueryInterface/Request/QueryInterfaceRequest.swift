@@ -33,6 +33,20 @@ public struct QueryInterfaceRequest<RowDecoder> {
 }
 
 extension QueryInterfaceRequest {
+    /// Creates a request that fetches all columns and all rows from a
+    /// database table.
+    ///
+    ///     // SELECT * FROM player
+    ///     let request = QueryInterfaceRequest<Player>.all(fromTable: "player")
+    ///     let players: [Player] = try dbQueue.read { db in
+    ///         try request.fetchAll(db)
+    ///      }
+    public static func all(fromTable tableName: String) -> Self {
+        return QueryInterfaceRequest(query: SQLQuery(relation: .all(fromTable: tableName)))
+    }
+}
+
+extension QueryInterfaceRequest {
     init(relation: SQLRelation) {
         self.init(query: SQLQuery(relation: relation))
     }

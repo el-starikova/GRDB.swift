@@ -106,3 +106,18 @@ public struct HasOneAssociation<Origin, Destination>: AssociationToOne {
             cardinality: .toOne)
     }
 }
+
+extension HasOneAssociation {
+    public init(
+        originTable: String,
+        destinationTable: String,
+        key: String? = nil,
+        using foreignKey: ForeignKey? = nil)
+    {
+        self.init(
+            originTableName: originTable,
+            destinationRelation: .all(fromTable: destinationTable),
+            key: key,
+            using: foreignKey)
+    }
+}
