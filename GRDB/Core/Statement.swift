@@ -5,7 +5,9 @@ public typealias SQLiteStatement = OpaquePointer
 
 extension CharacterSet {
     /// Statements are separated by semicolons and white spaces
-    static let sqlStatementSeparators = CharacterSet(charactersIn: ";").union(.whitespacesAndNewlines)
+    static var sqlStatementSeparators: CharacterSet {
+        return CharacterSet(charactersIn: ";").union(.whitespacesAndNewlines)
+    }
 }
 
 /// A statement represents an SQL query.
